@@ -231,6 +231,9 @@
   .free-cta .cta-btn.primary { background: var(--green); color: #08130B; }
   .free-cta .cta-btn.secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
   .tech-peg { background: var(--green-soft); border: 1px solid var(--line-strong); border-radius: 10px; padding: 14px; margin-top: 14px; }
+.candle-wrap { margin-top: 14px; }
+.candle-wrap h3 { margin-top: 0; }
+#ethCandleChart { width: 100%; height: 230px; display: block; background: var(--bg-deep); border: 1px solid var(--line); border-radius: 10px; }
   .arow { border-top: 1px solid var(--line); padding: 12px 0 2px; }
   .arow-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .arow-id { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
@@ -376,6 +379,12 @@ setTimeout(function () { var l = document.getElementById("appLoader"); if (l) l.
       <div class="arow-meta" id="aTechPegLine">Reading the peg from the Tech contract…</div>
       <div class="arow-reason" id="aTechEthLine"></div>
       <div class="arow-meta" id="aTechSuggest"></div>
+    </div>
+
+    <div class="candle-wrap">
+      <h3>ETH — 30-day candles</h3>
+      <canvas id="ethCandleChart" width="640" height="230"></canvas>
+      <p class="small muted" id="ethCandleNote">Daily candles from the same data as the board.</p>
     </div>
 
     <div id="analystRows">
@@ -1182,6 +1191,8 @@ function aFetchFromBinance(symbol) {
           closes: win.map(function (k) { return parseFloat(k[4]); }),
           highs: win.map(function (k) { return parseFloat(k[2]); }),
           lows: win.map(function (k) { return parseFloat(k[3]); }),
+          opens: win.map(function (k) { return parseFloat(k[1]); }),
+          times: win.map(function (k) { return k[0]; }),
           source: base.indexOf("binance.us") !== -1 ? "Binance US" : "Binance"
         };
       });
@@ -1210,6 +1221,8 @@ function aFetchFromKraken(symbol) {
       closes: win.map(function (r) { return parseFloat(r[4]); }),
       highs: win.map(function (r) { return parseFloat(r[2]); }),
       lows: win.map(function (r) { return parseFloat(r[3]); }),
+      opens: win.map(function (r) { return parseFloat(r[1]); }),
+      times: win.map(function (r) { return r[0] * 1000; }),
       source: "Kraken"
     };
   });
@@ -1228,9 +1241,12 @@ function aFetchFromCoinGecko(symbol) {
       var day = new Date(p[0]).toISOString().slice(0, 10);
       byDay.set(day, p[1]);
     });
-    var closes = Array.from(byDay.values()).slice(-(ANALYST_DAYS + 1));
+    var days = Array.from(byDay.keys()).slice(-(ANALYST_DAYS + 1));
+    var closes = days.map(function (d) { return byDay.get(d); });
     if (closes.length < 2) throw new Error("CoinGecko returned too few days");
-    return { closes: closes, highs: closes.slice(), lows: closes.slice(), source: "CoinGecko (approx)" };
+    /* CoinGecko gives closes only — candles are flat (open = high = low = close). */
+    return { closes: closes, highs: closes.slice(), lows: closes.slice(), opens: closes.slice(),
+      times: days.map(function (d) { return Date.parse(d); }), source: "CoinGecko (approx)" };
   });
 }
 
@@ -1244,6 +1260,10 @@ function aAnalyzeSymbol(symbol) {
   }).then(function (data) {
     var result = aAnalyzeCandles(symbol, data.closes, data.highs, data.lows);
     result.source = data.source;
+    if (symbol === "ETH") {
+      /* Raw daily candles for the ETH candlestick chart — same data, no extra fetch. */
+      result.candles = { opens: data.opens, highs: data.highs, lows: data.lows, closes: data.closes, times: data.times };
+    }
     return result;
   }).catch(function (err) {
     return { symbol: symbol, available: false, error: err.message };
@@ -1335,7 +1355,152 @@ function renderAnalyst(board) {
     $("aTechEthLine").textContent = "ETH market unavailable right now — no suggested thresholds.";
     $("aTechSuggest").textContent = "";
   }
+  drawEthCandles(eth);
 }
+
+/* ETH candlestick chart — plain canvas, no library. Draws the daily
+   candles the analyst already fetched (Binance US, Kraken, or the
+   CoinGecko fallback), plus the live Tech buy/sell levels read off the
+   dashboard. Redraws every time renderAnalyst runs (every 5-minute
+   refresh, the Refresh button, and cached-board renders). */
+function drawEthCandles(eth) {
+  var canvas = $("ethCandleChart");
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext("2d");
+  var dpr = window.devicePixelRatio || 1;
+  var cssW = canvas.clientWidth || 640;
+  var cssH = 230;
+  if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  function noData(msg) {
+    ctx.fillStyle = "#B8A6E3";
+    ctx.font = "14px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(msg, cssW / 2, cssH / 2);
+  }
+
+  if (!eth || !eth.available || !eth.candles || !eth.candles.closes || eth.candles.closes.length < 2) {
+    noData("ETH candles unavailable right now.");
+    return;
+  }
+  var c = eth.candles;
+  var n = c.closes.length;
+
+  /* Live Tech thresholds, read off the dashboard (same on-chain reads,
+     no new network call). Skip the lines until the dashboard has them. */
+  function dashLevel(id) {
+    var el = $(id);
+    if (!el) return null;
+    var v = parseFloat(el.textContent.replace(/[$,]/g, ""));
+    return isFinite(v) && v > 0 ? v : null;
+  }
+  var buyLevel = dashLevel("dBuyBelow");
+  var sellLevel = dashLevel("dSellAbove");
+
+  var lo = Math.min.apply(null, c.lows);
+  var hi = Math.max.apply(null, c.highs);
+  if (buyLevel !== null) { lo = Math.min(lo, buyLevel); hi = Math.max(hi, buyLevel); }
+  if (sellLevel !== null) { lo = Math.min(lo, sellLevel); hi = Math.max(hi, sellLevel); }
+  if (!(hi > lo)) { hi = lo + 1; }
+  var pad = (hi - lo) * 0.06 || 1;
+  lo -= pad; hi += pad;
+
+  var padL = 8, padR = 58, padT = 10, padB = 20;
+  var plotW = cssW - padL - padR;
+  var plotH = cssH - padT - padB;
+  function yOf(p) { return padT + (hi - p) / (hi - lo) * plotH; }
+  function fmtAxis(p) {
+    if (p >= 1000) return "$" + Math.round(p).toLocaleString("en-US");
+    if (p >= 1) return "$" + p.toFixed(0);
+    return "$" + p.toFixed(2);
+  }
+
+  /* Grid + price labels on the right. */
+  ctx.font = "11px system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  var gridN = 4;
+  for (var g = 0; g <= gridN; g++) {
+    var gv = lo + (hi - lo) * g / gridN;
+    var gy = yOf(gv);
+    ctx.strokeStyle = "rgba(75, 52, 128, 0.7)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + plotW, gy); ctx.stroke();
+    ctx.fillStyle = "#B8A6E3";
+    ctx.fillText(fmtAxis(gv), padL + plotW + 6, gy);
+  }
+
+  /* Candles: green when close >= open, red when close < open. */
+  var slot = plotW / n;
+  var bodyW = Math.max(2, Math.min(14, slot * 0.6));
+  for (var i = 0; i < n; i++) {
+    var o = c.opens[i], h = c.highs[i], l = c.lows[i], cl = c.closes[i];
+    var cx = padL + slot * i + slot / 2;
+    var up = cl >= o;
+    var col = up ? "#22C55E" : "#EF4444";
+    ctx.strokeStyle = col;
+    ctx.fillStyle = col;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, yOf(h)); ctx.lineTo(cx, yOf(l)); ctx.stroke();
+    var yO = yOf(o), yC = yOf(cl);
+    var top = Math.min(yO, yC);
+    var bh = Math.max(1, Math.abs(yC - yO));
+    ctx.fillRect(cx - bodyW / 2, top, bodyW, bh);
+  }
+
+  /* Live buy/sell lines (dashed, labeled). */
+  function levelLine(level, color, label) {
+    var ly = yOf(level);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, ly); ctx.lineTo(padL + plotW, ly); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = color;
+    ctx.font = "bold 11px system-ui, sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(label, padL + 4, ly - 3);
+  }
+  var note = "Daily candles from the same data as the board.";
+  if (buyLevel !== null) {
+    levelLine(buyLevel, "#4ADE80", "BUY " + fmtAxis(buyLevel));
+    note += " Green line = live buy level.";
+  }
+  if (sellLevel !== null) {
+    levelLine(sellLevel, "#E9B949", "SELL " + fmtAxis(sellLevel));
+    note += " Gold line = live sell level.";
+  }
+  var noteEl = $("ethCandleNote");
+  if (noteEl) noteEl.textContent = note;
+
+  /* Date labels: first, middle, last candle. */
+  ctx.fillStyle = "#B8A6E3";
+  ctx.font = "11px system-ui, sans-serif";
+  ctx.textBaseline = "top";
+  function fmtDay(ms) {
+    var d = new Date(ms);
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return months[d.getMonth()] + " " + d.getDate();
+  }
+  if (c.times && c.times.length === n) {
+    var marks = [0, Math.floor(n / 2), n - 1];
+    marks.forEach(function (idx, k) {
+      var tx = padL + slot * idx + slot / 2;
+      ctx.textAlign = k === 0 ? "left" : k === 2 ? "right" : "center";
+      ctx.fillText(fmtDay(c.times[idx]), tx, padT + plotH + 4);
+    });
+  }
+}
+
+/* Redraw the chart on rotate/resize from the last loaded board. */
+window.addEventListener("resize", function () { if (lastAnalyst) drawEthCandles(lastAnalyst.eth); });
 
 /* Tech peg for the board: backing ratio + supply, read from the
    Tech contract (same reads the dashboard below uses). */
