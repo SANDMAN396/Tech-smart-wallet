@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tech Investor — Technologynine</title>
+<meta name="description" content="Tech, Dollar and SmartWallet: three products, one system, built to make a profit in the crypto system.">
+<style>
+  :root {
+    color-scheme: dark;
+    --green: #22C55E;
+    --gold: #F5C542;
+    --gold-light: #FFE98A;
+    --gold-dark: #D99A16;
+    --bg: #1A0B2E;
+    --bg-deep: #150826;
+    --surface: #261447;
+    --surface-2: #34205E;
+    --surface-3: #3D2770;
+    --ink: #F5F0FF;
+    --ink-2: #D6C9F5;
+    --ink-3: #B8A6E3;
+    --line: #4B3480;
+    --line-strong: #5E46A3;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    background-image: radial-gradient(1100px 520px at 50% -120px, #2E1065 0%, var(--bg) 62%);
+    background-repeat: no-repeat;
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 48px; }
+  header.hero { display: flex; align-items: center; gap: 16px; padding: 28px 4px 8px; }
+  .app-logo {
+    width: 72px; height: 72px; border-radius: 50%; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 35% 30%, #FFE98A 0%, #F5C542 48%, #D99A16 100%);
+    border: 2px solid #FFE98A;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), inset 0 -6px 12px rgba(146, 96, 0, 0.35);
+    color: #6B4200; font-size: 44px; font-weight: 900; line-height: 1;
+  }
+  header.hero h1 { margin: 0; font-size: 26px; line-height: 1.15; }
+  header.hero .sub { color: var(--gold); font-weight: 800; font-size: 18px; margin-top: 2px; }
+  .pitch { font-size: 19px; color: var(--ink-2); padding: 12px 4px 4px; }
+  .pitch b { color: var(--ink); }
+  h2 { font-size: 20px; margin: 32px 4px 12px; color: var(--gold-light); }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin: 0 0 14px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 19px; }
+  .card h3 .tag {
+    display: inline-block; vertical-align: middle;
+    font-size: 12px; font-weight: 800; letter-spacing: 0.04em;
+    color: #08130B; background: var(--green);
+    border-radius: 999px; padding: 2px 9px; margin-left: 8px;
+  }
+  .card p { margin: 8px 0 0; color: var(--ink-2); }
+  .card p b { color: var(--ink); }
+  .proof li, .stages li { margin: 0 0 10px; color: var(--ink-2); }
+  .proof li b, .stages li b { color: var(--ink); }
+  .proof, .stages { padding-left: 22px; margin: 0 4px; }
+  .stages { list-style: none; padding-left: 4px; counter-reset: stage; }
+  .stages li { counter-increment: stage; position: relative; padding-left: 44px; min-height: 34px; }
+  .stages li::before {
+    content: counter(stage);
+    position: absolute; left: 0; top: 0;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface-2); border: 1px solid var(--line-strong);
+    color: var(--gold-light); font-weight: 900; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .honest {
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    padding: 16px 18px; margin: 24px 0 0;
+    color: var(--ink-2);
+  }
+  .honest b { color: var(--gold-light); }
+  label { display: block; font-weight: 700; margin: 18px 0 6px; }
+  label .opt { font-weight: 400; color: var(--ink-3); font-size: 14px; }
+  input[type="text"], select, textarea {
+    width: 100%;
+    background: var(--bg-deep);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    color: var(--ink);
+    font: inherit; font-size: 17px;
+    padding: 12px 14px;
+    outline: none;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--gold); }
+  textarea { min-height: 96px; resize: vertical; }
+  .btn {
+    display: block; width: 100%;
+    margin: 22px 0 0;
+    padding: 15px 18px;
+    border: none; border-radius: 12px;
+    background: linear-gradient(180deg, #FFE98A, #F5C542 55%, #D99A16);
+    color: #4A2E00; font: inherit; font-size: 18px; font-weight: 900;
+    cursor: pointer; text-align: center;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn.secondary {
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
+    margin-top: 12px;
+  }
+  #surveyMsg {
+    display: none;
+    margin-top: 16px;
+    background: var(--bg-deep);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 14px;
+    color: var(--ink-2);
+    font-size: 15px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  #surveyNote { display: none; margin-top: 12px; color: var(--ink-3); font-size: 15px; text-align: center; }
+  .privacy { color: var(--ink-3); font-size: 15px; margin: 12px 4px 0; }
+  footer {
+    margin-top: 36px; padding: 18px 4px 0;
+    border-top: 1px solid var(--line);
+    color: var(--ink-3); font-size: 14px; line-height: 1.6;
+  }
+  a { color: var(--gold-light); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="app-logo" aria-hidden="true">$</div>
+    <div>
+      <h1>Technologynine</h1>
+      <div class="sub">Tech Investor</div>
+    </div>
+  </header>
+
+  <p class="pitch">Three products, one system — <b>built to make a profit in the crypto system.</b></p>
+
+  <h2>The products</h2>
+
+  <div class="card">
+    <h3>Tech <span class="tag">v4</span></h3>
+    <p>A <b>$1 stable token backed 1:1 by stable tokens</b>. It trades two ways: approval-gated flash loans, plus its spot auto-trader that buys low and sells high.</p>
+    <p>Profit is shared <b>70% to holders, 20% to trading capital, 10% to treasury</b>. The holders' share stays in the contract as extra backing, so each Tech slowly becomes redeemable for <b>more than $1</b> over time. Holders do nothing — no claiming, no staking.</p>
+  </div>
+
+  <div class="card">
+    <h3>Dollar <span class="tag">V3</span></h3>
+    <p>A <b>$1 token with the trading engine built inside it</b>. Trading runs on a separate USDT stake and <b>never touches the Dollar supply</b>. The owner takes the trading profit.</p>
+  </div>
+
+  <div class="card">
+    <h3>SmartWallet <span class="tag">V3</span></h3>
+    <p>A <b>wallet that trades what it holds</b> — approval-gated and flash-loan powered. Nothing trades without an approval first.</p>
+  </div>
+
+  <h2>Proof so far</h2>
+  <ul class="proof">
+    <li><b>Rebuilt November 17, 2026</b> with approval-gated flash-loan trading across all three products.</li>
+    <li><b>81 of 81 local tests pass</b>, including full tests against a copy of mainnet with real Aave, Uniswap and USDT.</li>
+    <li><b>Live Sepolia testnet testing is in progress right now.</b></li>
+    <li>The earlier version's <b>first live buy legs fired on Sepolia in November</b>.</li>
+  </ul>
+
+  <div class="honest">
+    <b>Honest status:</b> no real-money profit yet — everything so far is test money. No earnings are claimed and none are promised.
+  </div>
+
+  <h2>Stages ahead</h2>
+  <ol class="stages">
+    <li><b>Prove profit on Sepolia test money</b> — a full round trip, a sell that realizes profit, and a redeem rate above $1.00.</li>
+    <li><b>Professional audit</b> — required before anything touches mainnet.</li>
+    <li><b>Mainnet deployment.</b></li>
+    <li><b>Funding</b> — the raise amount is to be agreed with founding investors.</li>
+  </ol>
+
+  <h2>Interested? Tell us</h2>
+  <p class="privacy">A few short questions. Nothing you type here is stored or sent anywhere by this page — your answers are compiled into a message that <b>you</b> send yourself, from your own phone.</p>
+
+  <form id="surveyForm" onsubmit="return false;">
+    <label for="qName">Your name <span class="opt">(optional)</span></label>
+    <input type="text" id="qName" autocomplete="off" placeholder="">
+
+    <label for="qInterest">How interested are you?</label>
+    <select id="qInterest">
+      <option value="Just looking">Just looking</option>
+      <option value="Interested">Interested</option>
+      <option value="Ready to talk">Ready to talk</option>
+    </select>
+
+    <label for="qProduct">Which product interests you most?</label>
+    <select id="qProduct">
+      <option value="All three">All three</option>
+      <option value="Tech">Tech</option>
+      <option value="Dollar">Dollar</option>
+      <option value="SmartWallet">SmartWallet</option>
+    </select>
+
+    <label for="qKnow">What would you want to know before investing? <span class="opt">(optional)</span></label>
+    <textarea id="qKnow" placeholder=""></textarea>
+
+    <label for="qReach">How can we reach you? <span class="opt">(optional — your choice: phone, email, or leave blank)</span></label>
+    <input type="text" id="qReach" autocomplete="off" placeholder="">
+
+    <button class="btn" type="button" id="shareBtn">Share my answers</button>
+    <button class="btn secondary" type="button" id="copyBtn">Copy answers instead</button>
+    <div id="surveyMsg"></div>
+    <div id="surveyNote"></div>
+  </form>
+
+  <footer>
+    Built on Sepolia testnet. Contracts are unaudited. No earnings are guaranteed and no returns are promised. This page is not investment advice. Nothing you enter on this page is stored or transmitted by this page — your answers leave only if you choose to share them.
+  </footer>
+
+</div>
+<script>
+(function () {
+  function compileAnswers() {
+    var name = document.getElementById('qName').value.trim();
+    var interest = document.getElementById('qInterest').value;
+    var product = document.getElementById('qProduct').value;
+    var know = document.getElementById('qKnow').value.trim();
+    var reach = document.getElementById('qReach').value.trim();
+    var lines = ['Tech Investor — Technologynine', ''];
+    lines.push('Interest: ' + interest);
+    lines.push('Most interested in: ' + product);
+    if (name) lines.push('Name: ' + name);
+    if (know) lines.push('Wants to know: ' + know);
+    if (reach) lines.push('Reach me at: ' + reach);
+    return lines.join('\n');
+  }
+  function showCompiled(text, note) {
+    var box = document.getElementById('surveyMsg');
+    box.textContent = text;
+    box.style.display = 'block';
+    var n = document.getElementById('surveyNote');
+    n.textContent = note;
+    n.style.display = 'block';
+  }
+  function copyText(text, done) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+    } else {
+      done(false);
+    }
+  }
+  document.getElementById('shareBtn').addEventListener('click', function () {
+    var text = compileAnswers();
+    if (navigator.share) {
+      navigator.share({ title: 'Tech Investor — Technologynine', text: text }).catch(function () {
+        showCompiled(text, 'Share was closed — your answers are below. Copy them and send them yourself.');
+      });
+    } else {
+      copyText(text, function (ok) {
+        showCompiled(text, ok
+          ? 'Sharing is not available in this browser — your answers are copied and shown below.'
+          : 'Sharing is not available in this browser — your answers are shown below. Copy them and send them yourself.');
+      });
+    }
+  });
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    var text = compileAnswers();
+    copyText(text, function (ok) {
+      showCompiled(text, ok
+        ? 'Copied to your clipboard.'
+        : 'Copy did not work in this browser — your answers are shown below. Long-press to copy them.');
+    });
+  });
+})();
+</script>
+</body>
+</html>
