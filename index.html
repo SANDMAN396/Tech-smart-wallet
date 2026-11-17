@@ -430,7 +430,8 @@ setTimeout(function () { var l = document.getElementById("appLoader"); if (l) l.
       <option value="DOLLAR">DOLLAR — Dollar</option>
     </select>
     <label for="sendTo">Send to (wallet address)</label>
-    <input type="text" id="sendTo" placeholder="0x…" autocomplete="off" spellcheck="false" />
+    <input type="text" id="sendTo" placeholder="0x…" spellcheck="false" />
+    <button class="secondary" id="sendPasteBtn" type="button">Paste address</button>
     <label for="sendAmount">Amount</label>
     <input type="number" id="sendAmount" min="0" step="any" inputmode="decimal" placeholder="0" />
     <button class="primary" id="sendReviewBtn">Review send</button>
@@ -1703,6 +1704,25 @@ function loadPortfolio() {
 }
 
 /* ---------- send ---------- */
+function pasteSendAddress() {
+  var statusEl = $("sendStatus");
+  if (!navigator.clipboard || !navigator.clipboard.readText) {
+    setStatus(statusEl, "This browser can't read the clipboard — long-press the box and tap Paste.", "err");
+    return;
+  }
+  navigator.clipboard.readText().then(function (text) {
+    var addr = (text || "").trim();
+    if (!addr) { setStatus(statusEl, "The clipboard is empty — copy an address first.", "err"); return; }
+    $("sendTo").value = addr;
+    if (ethers.isAddress(addr)) {
+      setStatus(statusEl, "Address pasted: " + shortAddr(ethers.getAddress(addr)) + ".", "ok");
+    } else {
+      setStatus(statusEl, "Pasted, but that doesn't look like a wallet address — check it.", "err");
+    }
+  }).catch(function () {
+    setStatus(statusEl, "Couldn't read the clipboard — long-press the box and tap Paste.", "err");
+  });
+}
 function reviewSend() {
   var statusEl = $("sendStatus");
   $("sendConfirmBox").classList.add("hidden");
@@ -2095,6 +2115,7 @@ window.addEventListener("DOMContentLoaded", function () {
   });
   $("pfRefreshBtn").addEventListener("click", loadPortfolio);
   $("sendReviewBtn").addEventListener("click", reviewSend);
+  $("sendPasteBtn").addEventListener("click", pasteSendAddress);
   $("sendCancelBtn").addEventListener("click", cancelSend);
   $("sendConfirmBtn").addEventListener("click", confirmSend);
   $("copyAddrBtn").addEventListener("click", copyAddress);
